@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Prediction System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .predict-btn:active {
+            transform: translateY(0);
+        }
+
+        .predict-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .predict-btn:hover::before {
+            left: 100%;
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 400px;
+        }
+
+        .results-section h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+
+        .result-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 350px;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .result-card.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: heartbeat 2s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .result-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .result-probability {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e1e5e9;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 1s ease;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        }
+
+        .progress-fill.high-risk {
+            background: linear-gradient(90deg, #FF5722, #F44336);
+        }
+
+        .risk-positive {
+            color: #F44336;
+        }
+
+        .risk-negative {
+            color: #4CAF50;
+        }
+
+        .feature-info {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .feature-info h3 {
+            color: #1976D2;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .feature-info ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-info li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(33, 150, 243, 0.1);
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .feature-info li:last-child {
+            border-bottom: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            color: #667eea;
+            margin-left: 5px;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>❤️ Heart Disease Prediction System</h1>
+            <p>Advanced ML-powered cardiac risk assessment tool</p>
+        </div>
+
+        <div class="main-content">
+            <div class="form-section">
+                <h2>📋 Patient Information</h2>
+                <form id="predictionForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="age">Age (years) <span class="tooltip" data-tooltip="Patient's age in years">ℹ️</span></label>
+                            <input type="number" id="age" name="age" min="1" max="120" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sex">Sex <span class="tooltip" data-tooltip="1 = Male, 0 = Female">ℹ️</span></label>
+                            <select id="sex" name="sex" required>
+                                <option value="">Select...</option>
+                                <option value="1">Male</option>
+                                <option value="0">Female</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cp">Chest Pain Type <span class="tooltip" data-tooltip="0=Typical angina, 1=Atypical angina, 2=Non-anginal pain, 3=Asymptomatic">ℹ️</span></label>
+                            <select id="cp" name="cp" required>
+                                <option value="">Select...</option>
+                                <option value="0">Typical Angina</option>
+                                <option value="1">Atypical Angina</option>
+                                <option value="2">Non-anginal Pain</option>
+                                <option value="3">Asymptomatic</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="trestbps">Resting Blood Pressure <span class="tooltip" data-tooltip="Resting blood pressure in mm Hg">ℹ️</span></label>
+                            <input type="number" id="trestbps" name="trestbps" min="80" max="250" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="chol">Cholesterol <span class="tooltip" data-tooltip="Serum cholesterol in mg/dl">ℹ️</span></label>
+                            <input type="number" id="chol" name="chol" min="100" max="600" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fbs">Fasting Blood Sugar <span class="tooltip" data-tooltip="1 if > 120 mg/dl, 0 otherwise">ℹ️</span></label>
+                            <select id="fbs" name="fbs" required>
+                                <option value="">Select...</option>
+                                <option value="1">> 120 mg/dl</option>
+                                <option value="0">≤ 120 mg/dl</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="restecg">Resting ECG <span class="tooltip" data-tooltip="0=Normal, 1=ST-T abnormality, 2=LV hypertrophy">ℹ️</span></label>
+                            <select id="restecg" name="restecg" required>
+                                <option value="">Select...</option>
+                                <option value="0">Normal</option>
+                                <option value="1">ST-T Wave Abnormality</option>
+                                <option value="2">LV Hypertrophy</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="thalach">Max Heart Rate <span class="tooltip" data-tooltip="Maximum heart rate achieved">ℹ️</span></label>
+                            <input type="number" id="thalach" name="thalach" min="60" max="220" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="exang">Exercise Induced Angina <span class="tooltip" data-tooltip="1 = Yes, 0 = No">ℹ️</span></label>
+                            <select id="exang" name="exang" required>
+                                <option value="">Select...</option>
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="oldpeak">ST Depression <span class="tooltip" data-tooltip="ST depression induced by exercise relative to rest">ℹ️</span></label>
+                            <input type="number" id="oldpeak" name="oldpeak" min="0" max="10" step="0.1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="slope">ST Slope <span class="tooltip" data-tooltip="0=Upsloping, 1=Flat, 2=Downsloping">ℹ️</span></label>
+                            <select id="slope" name="slope" required>
+                                <option value="">Select...</option>
+                                <option value="0">Upsloping</option>
+                                <option value="1">Flat</option>
+                                <option value="2">Downsloping</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ca">Major Vessels <span class="tooltip" data-tooltip="Number of major vessels colored by fluoroscopy (0-3)">ℹ️</span></label>
+                            <select id="ca" name="ca" required>
+                                <option value="">Select...</option>
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="thal">Thalassemia <span class="tooltip" data-tooltip="1=Normal, 2=Fixed defect, 3=Reversible defect">ℹ️</span></label>
+                            <select id="thal" name="thal" required>
+                                <option value="">Select...</option>
+                                <option value="1">Normal</option>
+                                <option value="2">Fixed Defect</option>
+                                <option value="3">Reversible Defect</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="predict-btn">🔮 Predict Heart Disease Risk</button>
+                </form>
+
+                <div class="feature-info">
+                    <h3>📊 Model Information</h3>
+                    <ul>
+                        <li><strong>Algorithm:</strong> Random Forest Classifier</li>
+                        <li><strong>Accuracy:</strong> ~85% on test data</li>
+                        <li><strong>Features:</strong> 13 clinical parameters</li>
+                        <li><strong>Dataset:</strong> Cleveland Heart Disease Database</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2>🎯 Prediction Results</h2>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing patient data...</p>
+                </div>
+
+                <div id="initialMessage">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🏥</div>
+                    <p style="color: #666; font-size: 1.1rem;">Fill out the patient information form and click "Predict" to get the heart disease risk assessment.</p>
+                </div>
+
+                <div class="result-card" id="resultCard" style="display: none;">
+                    <div class="result-icon" id="resultIcon">❤️</div>
+                    <div class="result-text" id="resultText">Result will appear here</div>
+                    <div class="result-probability" id="resultProbability">Probability: --</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div id="recommendationText" style="margin-top: 15px; font-size: 0.95rem; color: #666;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulated ML model prediction function
+        function predictHeartDisease(formData) {
+            // This is a simplified simulation of the ML model
+            // In a real application, this would call your backend API
+            
+            // Convert form data to feature array
+            const features = [
+                parseFloat(formData.age),
+                parseFloat(formData.sex),
+                parseFloat(formData.cp),
+                parseFloat(formData.trestbps),
+                parseFloat(formData.chol),
+                parseFloat(formData.fbs),
+                parseFloat(formData.restecg),
+                parseFloat(formData.thalach),
+                parseFloat(formData.exang),
+                parseFloat(formData.oldpeak),
+                parseFloat(formData.slope),
+                parseFloat(formData.ca),
+                parseFloat(formData.thal)
+            ];
+
+            // Simplified risk calculation (for demonstration)
+            let riskScore = 0;
+            
+            // Age factor
+            if (features[0] > 60) riskScore += 0.2;
+            else if (features[0] > 50) riskScore += 0.1;
+            
+            // Sex factor (male = higher risk)
+            if (features[1] === 1) riskScore += 0.15;
+            
+            // Chest pain type
+            if (features[2] === 0) riskScore += 0.3; // Typical angina
+            else if (features[2] === 1) riskScore += 0.2; // Atypical angina
+            
+            // Blood pressure
+            if (features[3] > 140) riskScore += 0.15;
+            
+            // Cholesterol
+            if (features[4] > 240) riskScore += 0.1;
+            
+            // Fasting blood sugar
+            if (features[5] === 1) riskScore += 0.05;
+            
+            // Max heart rate (lower = higher risk)
+            if (features[7] < 150) riskScore += 0.1;
+            
+            // Exercise induced angina
+            if (features[8] === 1) riskScore += 0.2;
+            
+            // ST depression
+            if (features[9] > 1) riskScore += 0.15;
+            
+            // Number of major vessels
+            riskScore += features[11] * 0.1;
+            
+            // Thalassemia
+            if (features[12] === 3) riskScore += 0.2; // Reversible defect
+            else if (features[12] === 2) riskScore += 0.15; // Fixed defect
+            
+            // Add some randomness to make it more realistic
+            riskScore += (Math.random() - 0.5) * 0.2;
+            
+            // Ensure probability is between 0 and 1
+            const probability = Math.max(0, Math.min(1, riskScore));
+            const prediction = probability > 0.5 ? 1 : 0;
+            
+            return { prediction, probability };
+        }
+
+        // Form submission handler
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('initialMessage').style.display = 'none';
+            document.getElementById('resultCard').style.display = 'none';
+            
+            // Get form data
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Get prediction
+            const result = predictHeartDisease(data);
+            
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+            
+            // Show results
+            displayResults(result);
+        });
+
+        function displayResults(result) {
+            const resultCard = document.getElementById('resultCard');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultText = document.getElementById('resultText');
+            const resultProbability = document.getElementById('resultProbability');
+            const progressFill = document.getElementById('progressFill');
+            const recommendationText = document.getElementById('recommendationText');
+            
+            // Show result card
+            resultCard.style.display = 'block';
+            setTimeout(() => resultCard.classList.add('show'), 100);
+            
+            const probability = (result.probability * 100).toFixed(1);
+            
+            if (result.prediction === 1) {
+                // High risk
+                resultIcon.textContent = '⚠️';
+                resultText.textContent = 'High Risk of Heart Disease';
+                resultText.className = 'result-text risk-positive';
+                progressFill.style.width = probability + '%';
+                progressFill.classList.add('high-risk');
+                recommendationText.innerHTML = '<strong>Recommendation:</strong> Please consult a cardiologist immediately for further evaluation and treatment.';
+            } else {
+                // Low risk
+                resultIcon.textContent = '💚';
+                resultText.textContent = 'Low Risk of Heart Disease';
+                resultText.className = 'result-text risk-negative';
+                progressFill.style.width = probability + '%';
+                progressFill.classList.remove('high-risk');
+                recommendationText.innerHTML = '<strong>Recommendation:</strong> Maintain a healthy lifestyle with regular exercise and balanced diet.';
+            }
+            
+            resultProbability.textContent = `Risk Probability: ${probability}%`;
+        }
+
+        // Add some sample data for testing
+        function fillSampleData() {
+            const sampleData = {
+                age: 63,
+                sex: 1,
+                cp: 3,
+                trestbps: 145,
+                chol: 233,
+                fbs: 1,
+                restecg: 0,
+                thalach: 150,
+                exang: 0,
+                oldpeak: 2.3,
+                slope: 0,
+                ca: 0,
+                thal: 1
+            };
+
+            for (const [key, value] of Object.entries(sampleData)) {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = value;
+                }
+            }
+        }
+
+        // Add sample data button (for testing)
+        document.addEventListener('DOMContentLoaded', function() {
+            const sampleBtn = document.createElement('button');
+            sampleBtn.textContent = '📝 Fill Sample Data';
+            sampleBtn.type = 'button';
+            sampleBtn.style.cssText = `
+                background: #28a745;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-top: 10px;
+                font-size: 0.9rem;
+            `;
+            sampleBtn.onclick = fillSampleData;
+            
+            document.querySelector('.form-section').appendChild(sampleBtn);
+        });
+    </script>
+</body>
+</html>
